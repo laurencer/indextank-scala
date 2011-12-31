@@ -1,3 +1,15 @@
+# I want it now!
+
+Add `laurencer.github.com/repository` to your sbt resolvers file, and add
+`"io.sidekick" %% "indextank-scala" % "1.0"` to your sbt dependencies.
+
+ie.
+    resolvers += "laurencer repo" at "http://laurencer.github.com/repository"
+    dependencies += "io.sidekick" %% "indextank-scala" % "1.0"
+
+Be warned that I'll probably change the repository layout in the next few
+months (so if something breaks just check back here).
+
 # What is it?
 
 An async scala library for interacting with `indextank-engine`. It returns Akka
@@ -11,7 +23,7 @@ services using the TFramedTransport (required for async operations).
 This library does not provide any management functions from
 `indextank-service` - so basically none of the automated scaling or deployment.
 
-# What is the `indextank-thrift.jar`?
+# What is `indextank-thrift.jar`?
 
 It's the generated thrift classes compiled from `document.thrift` in
 `indextank-engine/thrift` directory. Probably in the future I'll include the
