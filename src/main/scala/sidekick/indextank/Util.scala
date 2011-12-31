@@ -12,7 +12,7 @@ object Callback {
       future.completeWithResult(result)
     }
 
-    def onError(exception: Exception): Unit = {
+    def onError(exception: Throwable): Unit = {
       future.completeWithException(exception);
     }
   }

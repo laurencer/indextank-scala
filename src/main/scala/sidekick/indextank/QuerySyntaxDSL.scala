@@ -5,7 +5,6 @@ package sidekick.indextank
  * contains additional information such as how many results to return and the fields to return.
  *
  * The Query Syntax refers to the actual search string - ie. 'potatoes AND country:ireland'.
- * The Query refers to the set of request parameters - ie. 'search?q=potatoes%20AND%20country:ireland&len=20'
  */
 object QuerySyntaxDSL {
 

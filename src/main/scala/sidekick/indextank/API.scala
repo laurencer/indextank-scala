@@ -45,9 +45,13 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
   /**
    * Services used for operations.
    */
-  val searchService = new Searcher.AsyncClient(buildProtocolFactory(searchTransport), asyncManager, searchTransport)
-  val indexService = new Indexer.AsyncClient(buildProtocolFactory(indexTransport), asyncManager, indexTransport)
-  val suggestionService = new Suggestor.AsyncClient(buildProtocolFactory(suggestionTransport), asyncManager, suggestionTransport)
+  val searchServiceFactory = new Searcher.AsyncClient.Factory(asyncManager, buildProtocolFactory(searchTransport))
+  val indexServiceFactory = new Indexer.AsyncClient.Factory(asyncManager, buildProtocolFactory(indexTransport))
+  val suggestionServiceFactory = new Suggestor.AsyncClient.Factory(asyncManager, buildProtocolFactory(suggestionTransport))
+
+  def searchService() = searchServiceFactory.getAsyncClient(searchTransport)
+  def indexService() = indexServiceFactory.getAsyncClient(searchTransport)
+  def suggestionService() = suggestionServiceFactory.getAsyncClient(searchTransport)
 
   /**
    * Helper function to convert a future result to a Unit result type.
