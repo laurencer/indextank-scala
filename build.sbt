@@ -6,7 +6,7 @@ version := "1.0"
 
 scalaVersion := "2.9.1"
 
-publishTo := Some(Resolver.file("file", new File("~/src/laurencer/repository")))
+publishTo := Some(Resolver.file("file", new File(Path.userHome.absolutePath + "/src/laurencer/repository")))
 
 resolvers ++= Seq(
   "Akka Repo" at "http://akka.io/repository"
