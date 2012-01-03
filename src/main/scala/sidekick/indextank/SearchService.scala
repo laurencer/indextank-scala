@@ -16,7 +16,7 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
    */
   def buildTransport(hosts: String): TNonblockingTransport = {
 
-    val parts = searchHost.split(":")
+    val parts = hosts.split(":")
     val host = parts(0)
     val port = parts(1).toInt
 
@@ -38,20 +38,20 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
   /**
    * Transports used for operations.
    */
+  val indexTransport = buildTransport(indexHost)
   val searchTransport = buildTransport(searchHost)
   val suggestionTransport = buildTransport(suggestionHost)
-  val indexTransport = buildTransport(indexHost)
 
   /**
    * Services used for operations.
    */
-  val searchServiceFactory = new Searcher.AsyncClient.Factory(asyncManager, buildProtocolFactory(searchTransport))
   val indexServiceFactory = new Indexer.AsyncClient.Factory(asyncManager, buildProtocolFactory(indexTransport))
+  val searchServiceFactory = new Searcher.AsyncClient.Factory(asyncManager, buildProtocolFactory(searchTransport))
   val suggestionServiceFactory = new Suggestor.AsyncClient.Factory(asyncManager, buildProtocolFactory(suggestionTransport))
 
+  def indexService() = indexServiceFactory.getAsyncClient(indexTransport)
   def searchService() = searchServiceFactory.getAsyncClient(searchTransport)
-  def indexService() = indexServiceFactory.getAsyncClient(searchTransport)
-  def suggestionService() = suggestionServiceFactory.getAsyncClient(searchTransport)
+  def suggestionService() = suggestionServiceFactory.getAsyncClient(suggestionTransport)
 
   /**
    * Helper function to convert a future result to a Unit result type.
