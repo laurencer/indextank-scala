@@ -14,7 +14,6 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "se.scalablesolutions.akka" % "akka-actor" % "1.2",
   "org.apache.cassandra.deps" % "libthrift" % "0.5.0",
   "io.sidekick" % "indextank-thrift" % "1.0"
 )
