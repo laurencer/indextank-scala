@@ -23,11 +23,8 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
     new TNonblockingSocket(host, port.intValue)
   }
 
-  /**
-   * Helper method to generate a protocol factory that uses the given transport.
-   */
-  def buildProtocolFactory(transport: TTransport) = new TProtocolFactory() {
-    def getProtocol(transport: TTransport): TProtocol = new TBinaryProtocol(transport)
+  val protocolFactory = new TProtocolFactory {
+    override def getProtocol(trans: TTransport): TProtocol = new TBinaryProtocol(trans)
   }
 
   /**
@@ -38,16 +35,53 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
   /**
    * Transports used for operations.
    */
-  val indexTransport = buildTransport(indexHost)
-  val searchTransport = buildTransport(searchHost)
-  val suggestionTransport = buildTransport(suggestionHost)
+
+  /**
+   * Returns a valid transport. Checks whether the given transport exists, 
+   * and whether it is valid - returning a new transport if not.
+   */
+  def resolveTransport(existingTransport : Option[TNonblockingTransport], host: String) = {
+    existingTransport match {
+      case None => {
+        val transport = buildTransport(host)
+        Some(transport)
+      }
+      case Some(transport) => {
+        if (!transport.isOpen) {
+          transport.close()
+          val newTransport = buildTransport(host)
+          Some(newTransport)
+        } else {
+          Some(transport) 
+        }
+      }
+    }
+  }
+  
+  var indexTransportImpl : Option[TNonblockingTransport] = None
+  def indexTransport = {
+    indexTransportImpl = resolveTransport(indexTransportImpl, indexHost)
+    indexTransportImpl.get
+  } 
+
+  var searchTransportImpl : Option[TNonblockingTransport] = None
+  def searchTransport = {
+    searchTransportImpl = resolveTransport(searchTransportImpl, searchHost)
+    searchTransportImpl.get
+  }
+
+  var suggestionTransportImpl : Option[TNonblockingTransport] = None
+  def suggestionTransport = {
+    suggestionTransportImpl = resolveTransport(suggestionTransportImpl, suggestionHost)
+    suggestionTransportImpl.get
+  }
 
   /**
    * Services used for operations.
    */
-  val indexServiceFactory = new Indexer.AsyncClient.Factory(asyncManager, buildProtocolFactory(indexTransport))
-  val searchServiceFactory = new Searcher.AsyncClient.Factory(asyncManager, buildProtocolFactory(searchTransport))
-  val suggestionServiceFactory = new Suggestor.AsyncClient.Factory(asyncManager, buildProtocolFactory(suggestionTransport))
+  val indexServiceFactory = new Indexer.AsyncClient.Factory(asyncManager, protocolFactory)
+  val searchServiceFactory = new Searcher.AsyncClient.Factory(asyncManager, protocolFactory)
+  val suggestionServiceFactory = new Suggestor.AsyncClient.Factory(asyncManager, protocolFactory)
 
   def indexService() = indexServiceFactory.getAsyncClient(indexTransport)
   def searchService() = searchServiceFactory.getAsyncClient(searchTransport)
@@ -94,7 +128,7 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
     callback.future.map(toUnit)
   }
 
-  def search(q: Query) = {
+  def search(q: Query) : Future[ResultSet] = {
     import scala.collection.JavaConversions._
     val callback = Callback[Searcher.AsyncClient.search_call]()
     searchService.search(q.query, q.start, q.resultLength, q.scoringFunction,
@@ -102,7 +136,7 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
       q.categoryFilters.map(_.toIndexTank),
       q.variableRangeFilters.map(_.toIndexTank),
       q.functionRangeFilters.map(_.toIndexTank), q.extraParameters(), callback)
-    callback.future.map(c => c.getResult)
+    callback.future.map(c => ResultSet(c.getResult))
   }
 
   def autocomplete(query: String, field: String = ""): Future[AutocompleteResults] = {

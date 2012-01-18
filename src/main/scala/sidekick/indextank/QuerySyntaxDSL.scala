@@ -68,12 +68,12 @@ object QuerySyntaxDSL {
       return this
     }
     def or(second: QuerySyntaxBuilder) : CompositionBuilder = {
-      term = "AND"
+      term = "OR"
       this.second = second
       return this
     }
     def not(second: QuerySyntaxBuilder) : CompositionBuilder = {
-      term = "AND"
+      term = "NOT"
       this.second = second
       return this
     }
@@ -85,13 +85,13 @@ object QuerySyntaxDSL {
       return second
     }
     def or(second: QueryTermBuilder) : QueryTermBuilder = {
-      term = "AND"
+      term = "OR"
       this.second = second
       second.parent = Some(this)
       return second
     }
     def not(second: QueryTermBuilder) : QueryTermBuilder = {
-      term = "AND"
+      term = "NOT"
       this.second = second
       second.parent = Some(this)
       return second
