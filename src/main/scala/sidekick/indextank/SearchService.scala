@@ -96,11 +96,11 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
     new com.flaptor.indextank.rpc.Document().set_fields(doc.fields)
   }
 
-  def createDocument(document: Document): Future[Unit] = {
-    val timestampBoost = 0
-    val boosts = new HashMap[java.lang.Integer, java.lang.Double]()
+  def createDocument(document: Document, timestamp: Int, boosts: Map[Int, Double]): Future[Unit] = {
+    import scala.collection.JavaConversions._
+    val javaBoosts = boosts.map(t => (t._1.asInstanceOf[java.lang.Integer], t._2.asInstanceOf[java.lang.Double]))
     val callback = Callback[Indexer.AsyncClient.addDoc_call]()
-    indexService.addDoc(document.id, document, timestampBoost, boosts, callback)
+    indexService.addDoc(document.id, document, timestamp, javaBoosts, callback)
     callback.future.map(toUnit)
   }
 
@@ -137,6 +137,12 @@ class SearchService(val indexHost: String, val searchHost: String, val suggestio
       q.variableRangeFilters.map(_.toIndexTank),
       q.functionRangeFilters.map(_.toIndexTank), q.extraParameters(), callback)
     callback.future.map(c => ResultSet(c.getResult))
+  }
+  
+  def updateSearchFunction(index: Int, definition: String) : Future[Unit] = {
+    val callback = Callback[Indexer.AsyncClient.addScoreFunction_call]()
+    indexService.addScoreFunction(index, definition, callback)
+    callback.future.map(toUnit)
   }
 
   def autocomplete(query: String, field: String = ""): Future[AutocompleteResults] = {
